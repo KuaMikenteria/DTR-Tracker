@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes"
+    />
+    <title>DTR Tracker · Standalone</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Fixed Header -->
+    <header class="app-header">
+      <h1>📋 DTR Tracker <small>Daily Time Record</small></h1>
+      <div class="header-actions">
+        <button class="dark-toggle-btn" id="darkModeToggle">
+          🌙 Dark mode
+        </button>
+      </div>
+    </header>
+
+    <!-- Fixed Footer -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span
+          >© <strong>Kim Ruzzel L. Enteria</strong> · All rights reserved.</span
+        >
+      </div>
+      <div class="footer-right">
+        <span
+          >Reference:
+          <a
+            href="https://ojt-tracker-backup.web.app/dashboard.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="text-decoration: underline; color: var(--text-primary)"
+            >Josh (Coffeeafiii ☕)</a
+          ></span
+        >
+        <span>|</span>
+        <span>v1.0</span>
+      </div>
+    </footer>
+
+    <!-- Main Content -->
+    <div class="container">
+      <!-- stats + target -->
+      <div class="stats-target-row">
+        <div class="stats-cards">
+          <div class="stat-card">
+            <h3>📋 Total Shifts</h3>
+            <div class="stat-value" id="totalShiftsCount">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>⏱️ Avg / Shift</h3>
+            <div class="stat-value" id="avgHoursDisplay">0h 0m</div>
+          </div>
+          <div class="stat-card">
+            <h3>✅ Completed Hours</h3>
+            <div class="stat-value" id="completedHours">0h 0m</div>
+          </div>
+        </div>
+        <div class="target-card">
+          <h3>🎯 Target Hours</h3>
+          <div class="target-row">
+            <input
+              type="number"
+              id="targetHoursInput"
+              class="target-input"
+              step="1"
+              value="480"
+              min="0"
+            />
+            <span style="font-weight: 500">required hours</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-fill" id="progressFillBar"></div>
+          </div>
+          <div class="target-row" style="justify-content: space-between">
+            <span>📊 Progress: <strong id="progressPercent">0%</strong></span>
+            <span class="remaining-text"
+              >⏳ Remaining: <strong id="hoursRemaining">0h 0m</strong></span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- main log card -->
+      <div class="card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+          "
+        >
+          <h2>📅 Log Shift</h2>
+          <input
+            type="date"
+            id="shiftDate"
+            value="2026-05-08"
+            style="
+              padding: 6px 12px;
+              border-radius: 60px;
+              background: var(--surface);
+              border: 1px solid var(--border);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+        <div class="form-grid">
+          <!-- Morning -->
+          <div class="session-block">
+            <div class="session-title">🌅 Morning Session</div>
+            <div class="time-row">
+              <div class="time-input-group">
+                <span>IN</span>
+                <input
+                  type="number"
+                  id="morningStartHour"
+                  class="time-num"
+                  min="1"
+                  max="12"
+                  value="8"
+                />
+                <span>:</span>
+                <input
+                  type="number"
+                  id="morningStartMinute"
+                  class="time-num"
+                  min="0"
+                  max="59"
+                  value="0"
+                />
+                <select id="morningStartAmPm">
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
+              <span>→</span>
+              <div class="time-input-group">
+                <span>OUT</span>
+                <input
+                  type="number"
+                  id="morningEndHour"
+                  class="time-num"
+                  min="1"
+                  max="12"
+                  value="12"
+                />
+                <span>:</span>
+                <input
+                  type="number"
+                  id="morningEndMinute"
+                  class="time-num"
+                  min="0"
+                  max="59"
+                  value="0"
+                />
+                <select id="morningEndAmPm">
+                  <option value="AM">AM</option>
+                  <option value="PM" selected>PM</option>
+                </select>
+              </div>
+            </div>
+            <div class="skip-check">
+              <input type="checkbox" id="skipMorning" /><span
+                >⛔ Skip morning (half‑day)</span
+              >
+            </div>
+          </div>
+          <!-- Afternoon -->
+          <div class="session-block">
+            <div class="session-title">☀️ Afternoon Session</div>
+            <div class="time-row">
+              <div class="time-input-group">
+                <span>IN</span>
+                <input
+                  type="number"
+                  id="afternoonStartHour"
+                  class="time-num"
+                  min="1"
+                  max="12"
+                  value="1"
+                />
+                <span>:</span>
+                <input
+                  type="number"
+                  id="afternoonStartMinute"
+                  class="time-num"
+                  min="0"
+                  max="59"
+                  value="0"
+                />
+                <select id="afternoonStartAmPm">
+                  <option value="PM" selected>PM</option>
+                  <option value="AM">AM</option>
+                </select>
+              </div>
+              <span>→</span>
+              <div class="time-input-group">
+                <span>OUT</span>
+                <input
+                  type="number"
+                  id="afternoonEndHour"
+                  class="time-num"
+                  min="1"
+                  max="12"
+                  value="5"
+                />
+                <span>:</span>
+                <input
+                  type="number"
+                  id="afternoonEndMinute"
+                  class="time-num"
+                  min="0"
+                  max="59"
+                  value="0"
+                />
+                <select id="afternoonEndAmPm">
+                  <option value="PM" selected>PM</option>
+                  <option value="AM">AM</option>
+                </select>
+              </div>
+            </div>
+            <div class="skip-check">
+              <input type="checkbox" id="skipAfternoon" /><span
+                >⛔ Skip afternoon (half‑day)</span
+              >
+            </div>
+          </div>
+          <!-- Overtime -->
+          <div class="session-block">
+            <div class="session-title">⏱️ Overtime (optional)</div>
+            <div class="skip-check">
+              <input type="checkbox" id="enableOvertimeCheckbox" /><span
+                >➕ Include overtime</span
+              >
+            </div>
+            <div id="overtimeFields" style="display: none; margin-top: 10px">
+              <div class="time-row">
+                <div class="time-input-group">
+                  <span>START</span>
+                  <input
+                    type="number"
+                    id="otStartHour"
+                    class="time-num"
+                    min="1"
+                    max="12"
+                    value="5"
+                  />
+                  <span>:</span>
+                  <input
+                    type="number"
+                    id="otStartMinute"
+                    class="time-num"
+                    min="0"
+                    max="59"
+                    value="30"
+                  />
+                  <select id="otStartAmPm">
+                    <option value="PM">PM</option>
+                    <option value="AM">AM</option>
+                  </select>
+                </div>
+                <span>→</span>
+                <div class="time-input-group">
+                  <span>END</span>
+                  <input
+                    type="number"
+                    id="otEndHour"
+                    class="time-num"
+                    min="1"
+                    max="12"
+                    value="7"
+                  />
+                  <span>:</span>
+                  <input
+                    type="number"
+                    id="otEndMinute"
+                    class="time-num"
+                    min="0"
+                    max="59"
+                    value="0"
+                  />
+                  <select id="otEndAmPm">
+                    <option value="PM">PM</option>
+                    <option value="AM">AM</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="live-total" id="liveTotalPreview">
+          ⏲️ Current shift total: 0h 0m
+        </div>
+        <div class="btn-group">
+          <button
+            id="cancelEditBtn"
+            class="btn-secondary"
+            style="display: none"
+          >
+            Cancel edit
+          </button>
+          <button id="addShiftBtn">➕ Add Shift</button>
+          <button id="loadSampleBtn" class="btn-secondary">
+            📋 Load samples (2026)
+          </button>
+        </div>
+        <div id="formErrorMsg" class="error-msg" style="display: none"></div>
+      </div>
+
+      <!-- filter bar -->
+      <div class="filter-bar">
+        <div class="filter-controls">
+          <span>📂 View by:</span>
+          <select id="groupBySelect" class="filter-select">
+            <option value="none">All shifts (no grouping)</option>
+            <option value="month">Group by Month</option>
+            <option value="week">Group by Week</option>
+          </select>
+          <span>🔄 Sort:</span>
+          <select id="sortOrderSelect" class="filter-select">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </div>
+        <div>
+          <span id="filterBadge" style="font-size: 0.75rem"
+            >✨ group by month/week</span
+          >
+        </div>
+      </div>
+
+      <!-- shift history -->
+      <div class="shift-list">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+          "
+        >
+          <h3>📋 Shift history (2026 focus)</h3>
+        </div>
+        <div id="shiftsContainer">✨ No shifts logged yet.</div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast"></div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="editModal">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h2>✏️ Edit Shift</h2>
+          <button class="modal-close" id="modalCloseBtn" aria-label="Close">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-date-row">
+            <label for="modalDate">📆 Date</label>
+            <input type="date" id="modalDate" />
+          </div>
+          <div class="modal-form-grid">
+            <div class="modal-session-row">
+              <!-- Morning -->
+              <div class="modal-session-block">
+                <div class="modal-session-title">🌅 Morning</div>
+                <div class="modal-time-row">
+                  <div class="modal-time-group">
+                    <span>IN</span>
+                    <input
+                      type="number"
+                      id="modalMStartHour"
+                      class="modal-time-num"
+                      min="1"
+                      max="12"
+                      value="8"
+                    />
+                    <span>:</span>
+                    <input
+                      type="number"
+                      id="modalMStartMin"
+                      class="modal-time-num"
+                      min="0"
+                      max="59"
+                      value="0"
+                    />
+                    <select id="modalMStartAmPm">
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
+                  <span>→</span>
+                  <div class="modal-time-group">
+                    <span>OUT</span>
+                    <input
+                      type="number"
+                      id="modalMEndHour"
+                      class="modal-time-num"
+                      min="1"
+                      max="12"
+                      value="12"
+                    />
+                    <span>:</span>
+                    <input
+                      type="number"
+                      id="modalMEndMin"
+                      class="modal-time-num"
+                      min="0"
+                      max="59"
+                      value="0"
+                    />
+                    <select id="modalMEndAmPm">
+                      <option value="AM">AM</option>
+                      <option value="PM" selected>PM</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="modal-skip-check">
+                  <input type="checkbox" id="modalSkipMorning" /><span
+                    >⛔ Skip morning</span
+                  >
+                </div>
+              </div>
+              <!-- Afternoon -->
+              <div class="modal-session-block">
+                <div class="modal-session-title">☀️ Afternoon</div>
+                <div class="modal-time-row">
+                  <div class="modal-time-group">
+                    <span>IN</span>
+                    <input
+                      type="number"
+                      id="modalAStartHour"
+                      class="modal-time-num"
+                      min="1"
+                      max="12"
+                      value="1"
+                    />
+                    <span>:</span>
+                    <input
+                      type="number"
+                      id="modalAStartMin"
+                      class="modal-time-num"
+                      min="0"
+                      max="59"
+                      value="0"
+                    />
+                    <select id="modalAStartAmPm">
+                      <option value="PM" selected>PM</option>
+                      <option value="AM">AM</option>
+                    </select>
+                  </div>
+                  <span>→</span>
+                  <div class="modal-time-group">
+                    <span>OUT</span>
+                    <input
+                      type="number"
+                      id="modalAEndHour"
+                      class="modal-time-num"
+                      min="1"
+                      max="12"
+                      value="5"
+                    />
+                    <span>:</span>
+                    <input
+                      type="number"
+                      id="modalAEndMin"
+                      class="modal-time-num"
+                      min="0"
+                      max="59"
+                      value="0"
+                    />
+                    <select id="modalAEndAmPm">
+                      <option value="PM" selected>PM</option>
+                      <option value="AM">AM</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="modal-skip-check">
+                  <input type="checkbox" id="modalSkipAfternoon" /><span
+                    >⛔ Skip afternoon</span
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- Overtime -->
+            <div class="modal-session-block" style="flex: 1">
+              <div class="modal-session-title">⏱️ Overtime</div>
+              <div class="modal-skip-check">
+                <input type="checkbox" id="modalEnableOT" /><span
+                  >➕ Include overtime</span
+                >
+              </div>
+              <div class="modal-ot-fields" id="modalOTFields">
+                <div class="modal-time-group">
+                  <span>START</span>
+                  <input
+                    type="number"
+                    id="modalOTStartHour"
+                    class="modal-time-num"
+                    min="1"
+                    max="12"
+                    value="5"
+                  />
+                  <span>:</span>
+                  <input
+                    type="number"
+                    id="modalOTStartMin"
+                    class="modal-time-num"
+                    min="0"
+                    max="59"
+                    value="30"
+                  />
+                  <select id="modalOTStartAmPm">
+                    <option value="PM">PM</option>
+                    <option value="AM">AM</option>
+                  </select>
+                </div>
+                <span>→</span>
+                <div class="modal-time-group">
+                  <span>END</span>
+                  <input
+                    type="number"
+                    id="modalOTEndHour"
+                    class="modal-time-num"
+                    min="1"
+                    max="12"
+                    value="7"
+                  />
+                  <span>:</span>
+                  <input
+                    type="number"
+                    id="modalOTEndMin"
+                    class="modal-time-num"
+                    min="0"
+                    max="59"
+                    value="0"
+                  />
+                  <select id="modalOTEndAmPm">
+                    <option value="PM">PM</option>
+                    <option value="AM">AM</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-total" id="modalTotalPreview">
+            ⏲️ Current shift total: 0h 0m
+          </div>
+          <div
+            id="modalErrorMsg"
+            class="error-msg"
+            style="display: none; margin-top: 8px"
+          ></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-modal-cancel" id="modalCancelBtn">Cancel</button>
+          <button class="btn-modal-save" id="modalSaveBtn">
+            💾 Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

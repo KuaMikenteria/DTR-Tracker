@@ -1,0 +1,2165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes"
+    />
+    <title>DTR Tracker · Standalone</title>
+    <style>
+      /* ----- reset & variables (same as main) ----- */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+      }
+      :root {
+        --bg-body: #f0f2f8;
+        --surface: #ffffff;
+        --surface-2: #fafcff;
+        --border: #e9edf2;
+        --text-primary: #1a2634;
+        --text-secondary: #4a627a;
+        --accent-blue: #3b82f6;
+        --stat-bg: white;
+        --live-bg: #eef3fc;
+        --live-text: #0f3b5c;
+        --btn-primary: #1e2f3f;
+        --btn-secondary: #eef2f8;
+        --entry-bg: #ffffff;
+        --tag-bg: #eef3fc;
+        --total-tag: #eaf7e6;
+        --highlight-bg: #fff9c6;
+        --progress-fill: #3b82f6;
+        --group-header-bg: #e6edf4;
+      }
+      body.dark {
+        --bg-body: #121212;
+        --surface: #1e2a2f;
+        --surface-2: #252f36;
+        --border: #2d3e48;
+        --text-primary: #eef2ff;
+        --text-secondary: #9ab3c7;
+        --accent-blue: #5e9eff;
+        --stat-bg: #1f2c33;
+        --live-bg: #1e2f3c;
+        --live-text: #cbe5ff;
+        --btn-primary: #2c4b6e;
+        --btn-secondary: #2f3e48;
+        --entry-bg: #1f2c33;
+        --tag-bg: #253b44;
+        --total-tag: #1f4935;
+        --highlight-bg: #4a4a1a;
+        --progress-fill: #5e9eff;
+        --group-header-bg: #2a3a44;
+      }
+      body {
+        background: var(--bg-body);
+        padding: 0;
+        color: var(--text-primary);
+        transition:
+          background 0.2s,
+          color 0.2s;
+      }
+
+      /* ----- fixed header ----- */
+      .app-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 0.6rem 1.8rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+      .app-header h1 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .app-header h1 small {
+        font-size: 0.7rem;
+        font-weight: 400;
+        color: var(--text-secondary);
+        margin-left: 4px;
+      }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .dark-toggle-btn {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 60px;
+        padding: 6px 18px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--text-primary);
+        font-size: 0.8rem;
+      }
+
+      /* ----- fixed footer ----- */
+      .app-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        padding: 0.6rem 1.8rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        backdrop-filter: blur(4px);
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .app-footer .footer-left,
+      .app-footer .footer-right {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+      }
+      .app-footer .footer-right strong {
+        color: var(--text-primary);
+      }
+
+      /* ----- main container with padding for fixed elements ----- */
+      .container {
+        padding-top: 80px;
+        padding-bottom: 80px;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+      }
+
+      /* ----- original styles (unchanged) ----- */
+      .top-bar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 1.2rem;
+      }
+      .stats-target-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+        margin-bottom: 1.8rem;
+        justify-content: space-between;
+        align-items: stretch;
+      }
+      .stats-cards {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        flex: 2;
+      }
+      .stat-card {
+        background: var(--stat-bg);
+        border-radius: 28px;
+        padding: 0.8rem 1.4rem;
+        border: 1px solid var(--border);
+        min-width: 150px;
+      }
+      .stat-card h3 {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+      }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.3;
+        word-break: break-word;
+      }
+      .target-card {
+        background: var(--surface);
+        border-radius: 28px;
+        padding: 0.8rem 1.6rem;
+        border: 1px solid var(--border);
+        min-width: 260px;
+      }
+      .target-row {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 8px 0;
+      }
+      .target-input {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 32px;
+        padding: 6px 12px;
+        width: 100px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-align: center;
+        color: var(--text-primary);
+      }
+      .progress-bar-container {
+        background: var(--border);
+        border-radius: 40px;
+        height: 8px;
+        margin: 10px 0;
+        overflow: hidden;
+      }
+      .progress-fill {
+        background: var(--progress-fill);
+        width: 0%;
+        height: 100%;
+        border-radius: 40px;
+      }
+      .card {
+        background: var(--surface);
+        border-radius: 32px;
+        padding: 1.4rem 1.8rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border);
+      }
+      .form-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .session-block {
+        flex: 1;
+        min-width: 250px;
+        background: var(--surface-2);
+        border-radius: 24px;
+        padding: 1rem 1.2rem;
+        border: 1px solid var(--border);
+      }
+      .session-title {
+        font-weight: 700;
+        margin-bottom: 0.8rem;
+        border-left: 4px solid var(--accent-blue);
+        padding-left: 10px;
+      }
+      .time-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin: 10px 0;
+      }
+      .time-input-group {
+        display: flex;
+        gap: 5px;
+        background: var(--surface);
+        padding: 4px 10px;
+        border-radius: 40px;
+        border: 1px solid var(--border);
+        align-items: center;
+      }
+      .time-num {
+        width: 55px;
+        background: transparent;
+        border: none;
+        font-weight: 500;
+        font-size: 0.9rem;
+        padding: 4px 2px;
+        outline: none;
+        font-family: monospace;
+        color: var(--text-primary);
+      }
+      select {
+        background: var(--surface);
+        border: none;
+        font-weight: 500;
+        padding: 4px;
+        border-radius: 30px;
+        color: var(--text-primary);
+      }
+      .skip-check {
+        margin-top: 10px;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .disabled-input {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+      .live-total {
+        background: var(--live-bg);
+        border-radius: 60px;
+        padding: 0.6rem 1.2rem;
+        text-align: center;
+        margin: 1rem 0 1.2rem;
+        font-weight: 600;
+      }
+      .btn-group {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+      button {
+        background: var(--btn-primary);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 40px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      button.btn-secondary {
+        background: var(--btn-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+      }
+      .error-msg {
+        color: #e68484;
+        background: rgba(255, 80, 80, 0.1);
+        border-radius: 30px;
+        padding: 6px 14px;
+        margin-top: 10px;
+      }
+      .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1rem;
+        background: var(--surface);
+        padding: 0.8rem 1.2rem;
+        border-radius: 48px;
+        border: 1px solid var(--border);
+      }
+      .filter-controls {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .filter-select {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        padding: 6px 14px;
+        border-radius: 32px;
+        color: var(--text-primary);
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .group-header {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 1rem 0 0.5rem 0;
+        padding: 0.4rem 0.8rem;
+        background: var(--group-header-bg);
+        border-radius: 40px;
+        display: inline-block;
+        color: var(--accent-blue);
+      }
+      .week-range {
+        font-size: 0.7rem;
+        font-weight: normal;
+        margin-left: 8px;
+        color: var(--text-secondary);
+      }
+      .entry-item {
+        background: var(--entry-bg);
+        border-radius: 24px;
+        padding: 0.8rem 1rem;
+        margin-bottom: 0.7rem;
+        border: 1px solid var(--border);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.1s;
+      }
+      .entry-item.highlight-new {
+        background: var(--highlight-bg);
+        border-left: 5px solid #f59e0b;
+        animation: pulse 0.8s ease;
+      }
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          background: var(--highlight-bg);
+        }
+        100% {
+          background: var(--entry-bg);
+        }
+      }
+      .entry-details {
+        flex: 3;
+        font-size: 0.8rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 15px;
+        align-items: baseline;
+      }
+      .entry-date {
+        font-weight: 700;
+        background: var(--tag-bg);
+        padding: 3px 10px;
+        border-radius: 30px;
+      }
+      .entry-total {
+        font-weight: 800;
+        background: var(--total-tag);
+        padding: 3px 10px;
+        border-radius: 30px;
+      }
+      .edit-btn,
+      .delete-btn {
+        background: none;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 4px 12px;
+        border-radius: 30px;
+      }
+      .edit-btn {
+        background: var(--tag-bg);
+        color: var(--accent-blue);
+      }
+      .delete-btn {
+        background: #ffefef;
+        color: #b91c1c;
+      }
+      body.dark .delete-btn {
+        background: #421e1e;
+        color: #ff9e8f;
+      }
+      @media (max-width: 700px) {
+        body {
+          padding: 0;
+        }
+        .time-num {
+          width: 48px;
+        }
+        .stat-value {
+          font-size: 1.2rem;
+        }
+        .container {
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+      }
+
+      /* ----- Modal styles (from main project) ----- */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(8px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        padding: 1.5rem;
+        animation: modalFadeIn 0.25s ease;
+      }
+      .modal-overlay.active {
+        display: flex;
+      }
+      @keyframes modalFadeIn {
+        0% {
+          opacity: 0;
+          transform: scale(0.96) translateY(16px);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+      .modal-container {
+        background: var(--surface);
+        border-radius: 36px;
+        max-width: 780px;
+        width: 100%;
+        max-height: 94vh;
+        overflow-y: auto;
+        padding: 1.8rem 2rem 1.6rem;
+        border: 1px solid var(--border);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+        position: relative;
+      }
+      .modal-container::-webkit-scrollbar {
+        width: 5px;
+      }
+      .modal-container::-webkit-scrollbar-track {
+        background: var(--surface-2);
+        border-radius: 10px;
+      }
+      .modal-container::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 10px;
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.4rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 2px solid var(--border);
+      }
+      .modal-header h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .modal-close {
+        background: var(--surface-2);
+        border: none;
+        font-size: 1.8rem;
+        line-height: 1;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-primary);
+        transition: 0.2s;
+        border: 1px solid var(--border);
+        font-weight: 300;
+      }
+      .modal-close:hover {
+        background: var(--border);
+        transform: rotate(90deg);
+      }
+      .modal-form-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .modal-session-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .modal-session-block {
+        flex: 1;
+        min-width: 200px;
+        background: var(--surface-2);
+        border-radius: 20px;
+        padding: 0.9rem 1rem;
+        border: 1px solid var(--border);
+      }
+      .modal-session-title {
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-bottom: 0.6rem;
+        border-left: 4px solid var(--accent-blue);
+        padding-left: 10px;
+      }
+      .modal-time-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin: 6px 0;
+      }
+      .modal-time-group {
+        display: flex;
+        gap: 4px;
+        background: var(--surface);
+        padding: 2px 10px;
+        border-radius: 40px;
+        border: 1px solid var(--border);
+        align-items: center;
+      }
+      .modal-time-group span {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-right: 2px;
+      }
+      .modal-time-num {
+        width: 44px;
+        background: transparent;
+        border: none;
+        font-weight: 500;
+        font-size: 0.85rem;
+        padding: 4px 2px;
+        outline: none;
+        font-family: monospace;
+        color: var(--text-primary);
+      }
+      .modal-time-num:focus {
+        background: var(--surface-2);
+        border-radius: 20px;
+      }
+      .modal-skip-check {
+        margin-top: 8px;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .modal-skip-check input[type="checkbox"] {
+        accent-color: var(--accent-blue);
+        width: 16px;
+        height: 16px;
+      }
+      .modal-ot-fields {
+        display: none;
+        margin-top: 8px;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .modal-ot-fields.open {
+        display: flex;
+      }
+      .modal-date-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 4px;
+      }
+      .modal-date-row label {
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .modal-date-row input[type="date"] {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 40px;
+        padding: 6px 16px;
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+      .modal-total {
+        background: var(--live-bg);
+        border-radius: 60px;
+        padding: 0.5rem 1.2rem;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin: 0.6rem 0 0.2rem;
+        color: var(--live-text);
+      }
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 1.2rem;
+        padding-top: 0.8rem;
+        border-top: 2px solid var(--border);
+      }
+      .modal-footer button {
+        padding: 10px 28px;
+        border-radius: 40px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .modal-footer .btn-modal-cancel {
+        background: var(--btn-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+      }
+      .modal-footer .btn-modal-save {
+        background: var(--btn-primary);
+        color: #fff;
+      }
+      .modal-footer .btn-modal-save:hover {
+        filter: brightness(1.1);
+      }
+
+      /* ----- Toast ----- */
+      #toast {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--surface);
+        color: var(--text-primary);
+        padding: 14px 32px;
+        border-radius: 60px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--border);
+        font-weight: 600;
+        font-size: 1rem;
+        z-index: 99999;
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          opacity 0.3s ease,
+          visibility 0.3s ease,
+          transform 0.3s ease;
+        transform: translateX(-50%) translateY(20px);
+        white-space: nowrap;
+        backdrop-filter: blur(4px);
+      }
+      #toast.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
+      }
+      #toast.success {
+        border-left: 6px solid #22c55e;
+      }
+      #toast.error {
+        border-left: 6px solid #ef4444;
+      }
+      @media (max-width: 600px) {
+        #toast {
+          white-space: normal;
+          max-width: 90%;
+          font-size: 0.9rem;
+          padding: 12px 20px;
+          bottom: 70px;
+        }
+        .app-header {
+          padding: 0.4rem 1rem;
+        }
+        .app-header h1 {
+          font-size: 1rem;
+        }
+        .app-footer {
+          padding: 0.4rem 1rem;
+          font-size: 0.7rem;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 2px;
+        }
+        .container {
+          padding-top: 70px;
+          padding-bottom: 80px;
+        }
+      }
+      @media (max-width: 400px) {
+        .app-header h1 small {
+          display: none;
+        }
+      }
+      body.dark .modal-container {
+        background: var(--surface);
+      }
+      body.dark .modal-close {
+        background: var(--surface-2);
+        border-color: var(--border);
+      }
+      body.dark #toast {
+        background: var(--surface);
+        border-color: var(--border);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Fixed Header -->
+    <header class="app-header">
+      <h1>📋 DTR Tracker <small>Daily Time Record</small></h1>
+      <div class="header-actions">
+        <button class="dark-toggle-btn" id="darkModeToggle">
+          🌙 Dark mode
+        </button>
+      </div>
+    </header>
+
+    <!-- Fixed Footer -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span
+          >© <strong>Kim Ruzzel L. Enteria</strong> · All rights reserved.</span
+        >
+      </div>
+      <div class="footer-right">
+        <span
+          >Reference:
+          <a
+            href="https://ojt-tracker-backup.web.app/dashboard.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="text-decoration: underline; color: var(--text-primary)"
+            >Josh (Coffeeafiii ☕)</a
+          ></span
+        >
+        <span>|</span>
+        <span>v1.0</span>
+      </div>
+    </footer>
+
+    <!-- Main Content -->
+    <div class="container">
+      <!-- stats + target -->
+      <div class="stats-target-row">
+        <div class="stats-cards">
+          <div class="stat-card">
+            <h3>📋 Total Shifts</h3>
+            <div class="stat-value" id="totalShiftsCount">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>⏱️ Avg / Shift</h3>
+            <div class="stat-value" id="avgHoursDisplay">0h 0m</div>
+          </div>
+          <div class="stat-card">
+            <h3>✅ Completed Hours</h3>
+            <div class="stat-value" id="completedHours">0h 0m</div>
+          </div>
+        </div>
+        <div class="target-card">
+          <h3>🎯 Target Hours</h3>
+          <div class="target-row">
+            <input
+              type="number"
+              id="targetHoursInput"
+              class="target-input"
+              step="1"
+              value="480"
+              min="0"
+            />
+            <span style="font-weight: 500">required hours</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-fill" id="progressFillBar"></div>
+          </div>
+          <div class="target-row" style="justify-content: space-between">
+            <span>📊 Progress: <strong id="progressPercent">0%</strong></span>
+            <span class="remaining-text"
+              >⏳ Remaining: <strong id="hoursRemaining">0h 0m</strong></span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- main log card -->
+      <div class="card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+          "
+        >
+          <h2>📅 Log Shift</h2>
+          <input
+            type="date"
+            id="shiftDate"
+            value="2026-05-08"
+            style="
+              padding: 6px 12px;
+              border-radius: 60px;
+              background: var(--surface);
+              border: 1px solid var(--border);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+        <div class="form-grid">
+          <!-- Morning -->
+          <div class="session-block">
+            <div class="session-title">🌅 Morning Session</div>
+            <div class="time-row">
+              <div class="time-input-group">
+                <span>IN</span
+                ><input
+                  type="number"
+                  id="morningStartHour"
+                  class="time-num"
+                  min="1"
+                  max="12"
+                  value="8"
+                /><span>:</span
+                ><input
+                  type="number"
+                  id="morningStartMinute"
+                  class="time-num"
+                  min="0"
+                  max="59"
+                  value="0"
+                /><select id="morningStartAmPm">
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
+              <span>→</span>
+              <div class="time-input-group">
+                <span>OUT</span
+                ><input
+                  type="number"
+                  id="morningEndHour"
+                  class="time-num"
+                  min="1"
+                  max="12"
+                  value="12"
+                /><span>:</span
+                ><input
+                  type="number"
+                  id="morningEndMinute"
+                  class="time-num"
+                  min="0"
+                  max="59"
+                  value="0"
+                /><select id="morningEndAmPm">
+                  <option value="AM">AM</option>
+                  <option value="PM" selected>PM</option>
+                </select>
+              </div>
+            </div>
+            <div class="skip-check">
+              <input type="checkbox" id="skipMorning" /><span
+                >⛔ Skip morning (half‑day)</span
+              >
+            </div>
+          </div>
+          <!-- Afternoon -->
+          <div class="session-block">
+            <div class="session-title">☀️ Afternoon Session</div>
+            <div class="time-row">
+              <div class="time-input-group">
+                <span>IN</span
+                ><input
+                  type="number"
+                  id="afternoonStartHour"
+                  class="time-num"
+                  min="1"
+                  max="12"
+                  value="1"
+                /><span>:</span
+                ><input
+                  type="number"
+                  id="afternoonStartMinute"
+                  class="time-num"
+                  min="0"
+                  max="59"
+                  value="0"
+                /><select id="afternoonStartAmPm">
+                  <option value="PM" selected>PM</option>
+                  <option value="AM">AM</option>
+                </select>
+              </div>
+              <span>→</span>
+              <div class="time-input-group">
+                <span>OUT</span
+                ><input
+                  type="number"
+                  id="afternoonEndHour"
+                  class="time-num"
+                  min="1"
+                  max="12"
+                  value="5"
+                /><span>:</span
+                ><input
+                  type="number"
+                  id="afternoonEndMinute"
+                  class="time-num"
+                  min="0"
+                  max="59"
+                  value="0"
+                /><select id="afternoonEndAmPm">
+                  <option value="PM" selected>PM</option>
+                  <option value="AM">AM</option>
+                </select>
+              </div>
+            </div>
+            <div class="skip-check">
+              <input type="checkbox" id="skipAfternoon" /><span
+                >⛔ Skip afternoon (half‑day)</span
+              >
+            </div>
+          </div>
+          <!-- Overtime -->
+          <div class="session-block">
+            <div class="session-title">⏱️ Overtime (optional)</div>
+            <div class="skip-check">
+              <input type="checkbox" id="enableOvertimeCheckbox" /><span
+                >➕ Include overtime</span
+              >
+            </div>
+            <div id="overtimeFields" style="display: none; margin-top: 10px">
+              <div class="time-row">
+                <div class="time-input-group">
+                  <span>START</span
+                  ><input
+                    type="number"
+                    id="otStartHour"
+                    class="time-num"
+                    min="1"
+                    max="12"
+                    value="5"
+                  /><span>:</span
+                  ><input
+                    type="number"
+                    id="otStartMinute"
+                    class="time-num"
+                    min="0"
+                    max="59"
+                    value="30"
+                  /><select id="otStartAmPm">
+                    <option value="PM">PM</option>
+                    <option value="AM">AM</option>
+                  </select>
+                </div>
+                <span>→</span>
+                <div class="time-input-group">
+                  <span>END</span
+                  ><input
+                    type="number"
+                    id="otEndHour"
+                    class="time-num"
+                    min="1"
+                    max="12"
+                    value="7"
+                  /><span>:</span
+                  ><input
+                    type="number"
+                    id="otEndMinute"
+                    class="time-num"
+                    min="0"
+                    max="59"
+                    value="0"
+                  /><select id="otEndAmPm">
+                    <option value="PM">PM</option>
+                    <option value="AM">AM</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="live-total" id="liveTotalPreview">
+          ⏲️ Current shift total: 0h 0m
+        </div>
+        <div class="btn-group">
+          <button
+            id="cancelEditBtn"
+            class="btn-secondary"
+            style="display: none"
+          >
+            Cancel edit
+          </button>
+          <button id="addShiftBtn">➕ Add / Update Shift</button>
+          <button id="loadSampleBtn" class="btn-secondary">
+            📋 Load samples (2026)
+          </button>
+        </div>
+        <div id="formErrorMsg" class="error-msg" style="display: none"></div>
+      </div>
+
+      <!-- filter bar -->
+      <div class="filter-bar">
+        <div class="filter-controls">
+          <span>📂 View by:</span>
+          <select id="groupBySelect" class="filter-select">
+            <option value="none">All shifts (no grouping)</option>
+            <option value="month">Group by Month</option>
+            <option value="week">Group by Week</option>
+          </select>
+          <span>🔄 Sort:</span>
+          <select id="sortOrderSelect" class="filter-select">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </div>
+        <div>
+          <span id="filterBadge" style="font-size: 0.75rem"
+            >✨ group by month/week</span
+          >
+        </div>
+      </div>
+
+      <!-- shift history -->
+      <div class="shift-list">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+          "
+        >
+          <h3>📋 Shift history (2026 focus)</h3>
+        </div>
+        <div id="shiftsContainer">✨ No shifts logged yet.</div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast"></div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="editModal">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h2>✏️ Edit Shift</h2>
+          <button class="modal-close" id="modalCloseBtn" aria-label="Close">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-date-row">
+            <label for="modalDate">📆 Date</label>
+            <input type="date" id="modalDate" />
+          </div>
+          <div class="modal-form-grid">
+            <div class="modal-session-row">
+              <!-- Morning -->
+              <div class="modal-session-block">
+                <div class="modal-session-title">🌅 Morning</div>
+                <div class="modal-time-row">
+                  <div class="modal-time-group">
+                    <span>IN</span
+                    ><input
+                      type="number"
+                      id="modalMStartHour"
+                      class="modal-time-num"
+                      min="1"
+                      max="12"
+                      value="8"
+                    /><span>:</span
+                    ><input
+                      type="number"
+                      id="modalMStartMin"
+                      class="modal-time-num"
+                      min="0"
+                      max="59"
+                      value="0"
+                    /><select id="modalMStartAmPm">
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
+                  <span>→</span>
+                  <div class="modal-time-group">
+                    <span>OUT</span
+                    ><input
+                      type="number"
+                      id="modalMEndHour"
+                      class="modal-time-num"
+                      min="1"
+                      max="12"
+                      value="12"
+                    /><span>:</span
+                    ><input
+                      type="number"
+                      id="modalMEndMin"
+                      class="modal-time-num"
+                      min="0"
+                      max="59"
+                      value="0"
+                    /><select id="modalMEndAmPm">
+                      <option value="AM">AM</option>
+                      <option value="PM" selected>PM</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="modal-skip-check">
+                  <input type="checkbox" id="modalSkipMorning" /><span
+                    >⛔ Skip morning</span
+                  >
+                </div>
+              </div>
+              <!-- Afternoon -->
+              <div class="modal-session-block">
+                <div class="modal-session-title">☀️ Afternoon</div>
+                <div class="modal-time-row">
+                  <div class="modal-time-group">
+                    <span>IN</span
+                    ><input
+                      type="number"
+                      id="modalAStartHour"
+                      class="modal-time-num"
+                      min="1"
+                      max="12"
+                      value="1"
+                    /><span>:</span
+                    ><input
+                      type="number"
+                      id="modalAStartMin"
+                      class="modal-time-num"
+                      min="0"
+                      max="59"
+                      value="0"
+                    /><select id="modalAStartAmPm">
+                      <option value="PM" selected>PM</option>
+                      <option value="AM">AM</option>
+                    </select>
+                  </div>
+                  <span>→</span>
+                  <div class="modal-time-group">
+                    <span>OUT</span
+                    ><input
+                      type="number"
+                      id="modalAEndHour"
+                      class="modal-time-num"
+                      min="1"
+                      max="12"
+                      value="5"
+                    /><span>:</span
+                    ><input
+                      type="number"
+                      id="modalAEndMin"
+                      class="modal-time-num"
+                      min="0"
+                      max="59"
+                      value="0"
+                    /><select id="modalAEndAmPm">
+                      <option value="PM" selected>PM</option>
+                      <option value="AM">AM</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="modal-skip-check">
+                  <input type="checkbox" id="modalSkipAfternoon" /><span
+                    >⛔ Skip afternoon</span
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- Overtime -->
+            <div class="modal-session-block" style="flex: 1">
+              <div class="modal-session-title">⏱️ Overtime</div>
+              <div class="modal-skip-check">
+                <input type="checkbox" id="modalEnableOT" /><span
+                  >➕ Include overtime</span
+                >
+              </div>
+              <div class="modal-ot-fields" id="modalOTFields">
+                <div class="modal-time-group">
+                  <span>START</span
+                  ><input
+                    type="number"
+                    id="modalOTStartHour"
+                    class="modal-time-num"
+                    min="1"
+                    max="12"
+                    value="5"
+                  /><span>:</span
+                  ><input
+                    type="number"
+                    id="modalOTStartMin"
+                    class="modal-time-num"
+                    min="0"
+                    max="59"
+                    value="30"
+                  /><select id="modalOTStartAmPm">
+                    <option value="PM">PM</option>
+                    <option value="AM">AM</option>
+                  </select>
+                </div>
+                <span>→</span>
+                <div class="modal-time-group">
+                  <span>END</span
+                  ><input
+                    type="number"
+                    id="modalOTEndHour"
+                    class="modal-time-num"
+                    min="1"
+                    max="12"
+                    value="7"
+                  /><span>:</span
+                  ><input
+                    type="number"
+                    id="modalOTEndMin"
+                    class="modal-time-num"
+                    min="0"
+                    max="59"
+                    value="0"
+                  /><select id="modalOTEndAmPm">
+                    <option value="PM">PM</option>
+                    <option value="AM">AM</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-total" id="modalTotalPreview">
+            ⏲️ Current shift total: 0h 0m
+          </div>
+          <div
+            id="modalErrorMsg"
+            class="error-msg"
+            style="display: none; margin-top: 8px"
+          ></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-modal-cancel" id="modalCancelBtn">Cancel</button>
+          <button class="btn-modal-save" id="modalSaveBtn">
+            💾 Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ---------- Helper utilities (unchanged) ----------
+      function toMinutes(hour, minute, ampm) {
+        let h = parseInt(hour),
+          m = parseInt(minute);
+        if (isNaN(h)) h = 1;
+        if (isNaN(m)) m = 0;
+        if (ampm === "PM" && h !== 12) h += 12;
+        if (ampm === "AM" && h === 12) h = 0;
+        return h * 60 + m;
+      }
+      function formatHoursMinutes(minutes) {
+        if (minutes === null || isNaN(minutes)) return "0h 0m";
+        const hrs = Math.floor(minutes / 60),
+          mins = minutes % 60;
+        return `${hrs}h ${mins}m`;
+      }
+      function getWeekNumber(date) {
+        const d = new Date(
+          Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+        );
+        const dayNum = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+        return { year: d.getUTCFullYear(), week: weekNo };
+      }
+      function getWeekRange(date) {
+        const d = new Date(date);
+        const day = d.getDay() || 7;
+        const diff = day === 1 ? 0 : 1 - day;
+        const monday = new Date(d);
+        monday.setDate(d.getDate() + diff);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        return `${monday.toLocaleDateString("en-CA")} – ${sunday.toLocaleDateString("en-CA")}`;
+      }
+
+      // ---------- Data model ----------
+      let shifts = [];
+      let nextId = 1;
+      let editingId = null;
+      let highlightTimeout = null;
+
+      function getTotalCompletedMinutes() {
+        return shifts.reduce((sum, s) => sum + (s.totalMinutes || 0), 0);
+      }
+
+      function updateTargetAndStats() {
+        const completedMins = getTotalCompletedMinutes();
+        document.getElementById("completedHours").innerText =
+          formatHoursMinutes(completedMins);
+        const totalShifts = shifts.length;
+        let avgDisplay = "0h 0m";
+        if (totalShifts > 0) {
+          const avgMinutes = completedMins / totalShifts;
+          avgDisplay = formatHoursMinutes(avgMinutes);
+        }
+        document.getElementById("avgHoursDisplay").innerText = avgDisplay;
+        document.getElementById("totalShiftsCount").innerText = totalShifts;
+        const targetHrs =
+          parseFloat(document.getElementById("targetHoursInput").value) || 0;
+        const targetMinutes = targetHrs * 60;
+        const remainingMinutes = Math.max(0, targetMinutes - completedMins);
+        document.getElementById("hoursRemaining").innerText =
+          formatHoursMinutes(remainingMinutes);
+        let percent =
+          targetHrs > 0 ? (completedMins / 60 / targetHrs) * 100 : 0;
+        percent = Math.min(100, percent);
+        document.getElementById("progressPercent").innerText =
+          `${percent.toFixed(1)}%`;
+        document.getElementById("progressFillBar").style.width = `${percent}%`;
+      }
+
+      function getSortedShifts() {
+        const sortVal = document.getElementById("sortOrderSelect").value;
+        const sorted = [...shifts];
+        sorted.sort((a, b) => {
+          if (sortVal === "newest") return new Date(b.date) - new Date(a.date);
+          else return new Date(a.date) - new Date(b.date);
+        });
+        return sorted;
+      }
+
+      function groupShiftsByMonth(sortedShifts) {
+        const groups = new Map();
+        for (const shift of sortedShifts) {
+          const date = new Date(shift.date);
+          const year = date.getFullYear(),
+            month = date.getMonth();
+          const key = `${year}-${month}`;
+          const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ];
+          const monthName = `${monthNames[month]} ${year}`;
+          if (!groups.has(key)) groups.set(key, { monthName, shifts: [] });
+          groups.get(key).shifts.push(shift);
+        }
+        const sortedGroups = Array.from(groups.entries()).sort((a, b) =>
+          a[0].localeCompare(b[0]),
+        );
+        return sortedGroups.map(([_, group]) => group);
+      }
+
+      function groupShiftsByWeek(sortedShifts) {
+        const groups = new Map();
+        for (const shift of sortedShifts) {
+          const date = new Date(shift.date);
+          const { year, week } = getWeekNumber(date);
+          const key = `${year}-W${week}`;
+          const weekRange = getWeekRange(date);
+          if (!groups.has(key))
+            groups.set(key, { weekNum: week, year, weekRange, shifts: [] });
+          groups.get(key).shifts.push(shift);
+        }
+        const sortedGroups = Array.from(groups.entries()).sort((a, b) =>
+          a[0].localeCompare(b[0]),
+        );
+        return sortedGroups.map(([_, group]) => group);
+      }
+
+      function renderShiftEntry(shift) {
+        const totalF = formatHoursMinutes(shift.totalMinutes);
+        const mornRange = shift.skipMorning
+          ? "🌅 (skipped)"
+          : `🌅 ${shift.morningStart.hour}:${String(shift.morningStart.minute).padStart(2, "0")}${shift.morningStart.ampm} → ${shift.morningEnd.hour}:${String(shift.morningEnd.minute).padStart(2, "0")}${shift.morningEnd.ampm}`;
+        const afterRange = shift.skipAfternoon
+          ? "☀️ (skipped)"
+          : `☀️ ${shift.afternoonStart.hour}:${String(shift.afternoonStart.minute).padStart(2, "0")}${shift.afternoonStart.ampm} → ${shift.afternoonEnd.hour}:${String(shift.afternoonEnd.minute).padStart(2, "0")}${shift.afternoonEnd.ampm}`;
+        let otText = "";
+        if (shift.otEnabled && shift.otStart)
+          otText = ` + OT ${shift.otStart.hour}:${String(shift.otStart.minute).padStart(2, "0")}${shift.otStart.ampm}→${shift.otEnd.hour}:${String(shift.otEnd.minute).padStart(2, "0")}${shift.otEnd.ampm}`;
+        const highlightClass = shift._newHighlight ? "highlight-new" : "";
+        return `<div class="entry-item ${highlightClass}" data-id="${shift.id}">
+        <div class="entry-details">
+          <span class="entry-date">📆 ${shift.date}</span>
+          <span class="timespan">${mornRange}</span>
+          <span class="timespan">${afterRange}</span>
+          ${otText ? `<span class="timespan">${otText}</span>` : ""}
+          <span class="entry-total">⌛ ${totalF}</span>
+        </div>
+        <div class="entry-actions">
+          <button class="edit-btn" data-id="${shift.id}">✏️ Edit</button>
+          <button class="delete-btn" data-id="${shift.id}">🗑️ Delete</button>
+        </div>
+      </div>`;
+      }
+
+      function renderShiftsList() {
+        const groupBy = document.getElementById("groupBySelect").value;
+        let sorted = getSortedShifts();
+        if (sorted.length === 0) {
+          document.getElementById("shiftsContainer").innerHTML =
+            '<div style="text-align:center; padding:2rem;">📭 No shifts logged. Add your first shift.</div>';
+          updateTargetAndStats();
+          return;
+        }
+        let html = "";
+        if (groupBy === "month") {
+          const monthGroups = groupShiftsByMonth(sorted);
+          for (const group of monthGroups) {
+            html += `<div class="group-header">📅 ${group.monthName}</div>`;
+            for (const s of group.shifts) html += renderShiftEntry(s);
+          }
+        } else if (groupBy === "week") {
+          const weekGroups = groupShiftsByWeek(sorted);
+          for (const group of weekGroups) {
+            html += `<div class="group-header">🗓️ Week ${group.weekNum}, ${group.year} <span class="week-range">(${group.weekRange})</span></div>`;
+            for (const s of group.shifts) html += renderShiftEntry(s);
+          }
+        } else {
+          for (const s of sorted) html += renderShiftEntry(s);
+        }
+        document.getElementById("shiftsContainer").innerHTML = html;
+        document.querySelectorAll(".edit-btn").forEach((btn) =>
+          btn.addEventListener("click", (e) => {
+            const id = parseInt(btn.dataset.id);
+            editShift(id);
+          }),
+        );
+        document.querySelectorAll(".delete-btn").forEach((btn) =>
+          btn.addEventListener("click", (e) => {
+            const id = parseInt(btn.dataset.id);
+            deleteShift(id);
+          }),
+        );
+        updateTargetAndStats();
+      }
+
+      function applyHighlightToShift(shiftId) {
+        setTimeout(() => {
+          const entry = document.querySelector(
+            `.entry-item[data-id="${shiftId}"]`,
+          );
+          if (entry) {
+            entry.classList.add("highlight-new");
+            if (highlightTimeout) clearTimeout(highlightTimeout);
+            highlightTimeout = setTimeout(() => {
+              document
+                .querySelectorAll(".entry-item")
+                .forEach((el) => el.classList.remove("highlight-new"));
+            }, 2800);
+          }
+        }, 60);
+      }
+
+      // ---------- Form helpers (unchanged) ----------
+      function getCurrentFormShiftObject() {
+        const date = document.getElementById("shiftDate").value;
+        if (!date) return null;
+        const skipMorning = document.getElementById("skipMorning").checked;
+        const skipAfternoon = document.getElementById("skipAfternoon").checked;
+        const morningStart = {
+          hour: document.getElementById("morningStartHour").value,
+          minute: document.getElementById("morningStartMinute").value,
+          ampm: document.getElementById("morningStartAmPm").value,
+        };
+        const morningEnd = {
+          hour: document.getElementById("morningEndHour").value,
+          minute: document.getElementById("morningEndMinute").value,
+          ampm: document.getElementById("morningEndAmPm").value,
+        };
+        const afternoonStart = {
+          hour: document.getElementById("afternoonStartHour").value,
+          minute: document.getElementById("afternoonStartMinute").value,
+          ampm: document.getElementById("afternoonStartAmPm").value,
+        };
+        const afternoonEnd = {
+          hour: document.getElementById("afternoonEndHour").value,
+          minute: document.getElementById("afternoonEndMinute").value,
+          ampm: document.getElementById("afternoonEndAmPm").value,
+        };
+        const otEnabled = document.getElementById(
+          "enableOvertimeCheckbox",
+        ).checked;
+        let otStart = null,
+          otEnd = null;
+        if (otEnabled) {
+          otStart = {
+            hour: document.getElementById("otStartHour").value,
+            minute: document.getElementById("otStartMinute").value,
+            ampm: document.getElementById("otStartAmPm").value,
+          };
+          otEnd = {
+            hour: document.getElementById("otEndHour").value,
+            minute: document.getElementById("otEndMinute").value,
+            ampm: document.getElementById("otEndAmPm").value,
+          };
+        }
+        let total = 0;
+        if (!skipMorning) {
+          const startM = toMinutes(
+            morningStart.hour,
+            morningStart.minute,
+            morningStart.ampm,
+          );
+          const endM = toMinutes(
+            morningEnd.hour,
+            morningEnd.minute,
+            morningEnd.ampm,
+          );
+          if (endM <= startM) return null;
+          total += endM - startM;
+        }
+        if (!skipAfternoon) {
+          const startM = toMinutes(
+            afternoonStart.hour,
+            afternoonStart.minute,
+            afternoonStart.ampm,
+          );
+          const endM = toMinutes(
+            afternoonEnd.hour,
+            afternoonEnd.minute,
+            afternoonEnd.ampm,
+          );
+          if (endM <= startM) return null;
+          total += endM - startM;
+        }
+        if (otEnabled && otStart) {
+          const startM = toMinutes(otStart.hour, otStart.minute, otStart.ampm);
+          const endM = toMinutes(otEnd.hour, otEnd.minute, otEnd.ampm);
+          if (endM <= startM) return null;
+          total += endM - startM;
+        }
+        return {
+          date,
+          skipMorning,
+          skipAfternoon,
+          morningStart,
+          morningEnd,
+          afternoonStart,
+          afternoonEnd,
+          otEnabled,
+          otStart,
+          otEnd,
+          totalMinutes: total,
+        };
+      }
+
+      function addOrUpdateShift() {
+        const shiftData = getCurrentFormShiftObject();
+        if (!shiftData) {
+          document.getElementById("formErrorMsg").style.display = "block";
+          document.getElementById("formErrorMsg").innerText =
+            "❌ Invalid times: active sessions must have end after start.";
+          return;
+        }
+        let addedId = null;
+        if (editingId !== null) {
+          const index = shifts.findIndex((s) => s.id === editingId);
+          if (index !== -1) shifts[index] = { id: editingId, ...shiftData };
+          addedId = editingId;
+          editingId = null;
+          document.getElementById("cancelEditBtn").style.display = "none";
+          document.getElementById("addShiftBtn").innerHTML =
+            "➕ Add / Update Shift";
+        } else {
+          const newId = nextId++;
+          shifts.push({ id: newId, ...shiftData });
+          addedId = newId;
+        }
+        shifts.forEach((s) => delete s._newHighlight);
+        if (addedId) {
+          const target = shifts.find((s) => s.id === addedId);
+          if (target) target._newHighlight = true;
+        }
+        renderShiftsList();
+        if (addedId) applyHighlightToShift(addedId);
+        resetFormToDefault();
+        updateLivePreview();
+      }
+
+      function resetFormToDefault() {
+        document.getElementById("skipMorning").checked = false;
+        document.getElementById("skipAfternoon").checked = false;
+        toggleMorningFields();
+        toggleAfternoonFields();
+        document.getElementById("morningStartHour").value = 8;
+        document.getElementById("morningStartMinute").value = 0;
+        document.getElementById("morningStartAmPm").value = "AM";
+        document.getElementById("morningEndHour").value = 12;
+        document.getElementById("morningEndMinute").value = 0;
+        document.getElementById("morningEndAmPm").value = "PM";
+        document.getElementById("afternoonStartHour").value = 1;
+        document.getElementById("afternoonStartMinute").value = 0;
+        document.getElementById("afternoonStartAmPm").value = "PM";
+        document.getElementById("afternoonEndHour").value = 5;
+        document.getElementById("afternoonEndMinute").value = 0;
+        document.getElementById("afternoonEndAmPm").value = "PM";
+        document.getElementById("enableOvertimeCheckbox").checked = false;
+        document.getElementById("overtimeFields").style.display = "none";
+        document.getElementById("shiftDate").value = new Date()
+          .toISOString()
+          .slice(0, 10);
+        editingId = null;
+        document.getElementById("cancelEditBtn").style.display = "none";
+        document.getElementById("addShiftBtn").innerHTML =
+          "➕ Add / Update Shift";
+        updateLivePreview();
+      }
+
+      function deleteShift(id) {
+        if (!confirm("Delete this shift permanently?")) return;
+        shifts = shifts.filter((s) => s.id !== id);
+        if (editingId === id) resetFormToDefault();
+        renderShiftsList();
+      }
+
+      // ---------- Modal-based edit (overrides default editShift) ----------
+      function editShift(id) {
+        const shift = shifts.find((s) => s.id === id);
+        if (!shift) return;
+        // Populate modal with shift data
+        modalEditingId = id;
+        document.getElementById("modalDate").value = shift.date;
+        document.getElementById("modalSkipMorning").checked = shift.skipMorning;
+        document.getElementById("modalSkipAfternoon").checked =
+          shift.skipAfternoon;
+        document.getElementById("modalMStartHour").value =
+          shift.morningStart.hour;
+        document.getElementById("modalMStartMin").value =
+          shift.morningStart.minute;
+        document.getElementById("modalMStartAmPm").value =
+          shift.morningStart.ampm;
+        document.getElementById("modalMEndHour").value = shift.morningEnd.hour;
+        document.getElementById("modalMEndMin").value = shift.morningEnd.minute;
+        document.getElementById("modalMEndAmPm").value = shift.morningEnd.ampm;
+        document.getElementById("modalAStartHour").value =
+          shift.afternoonStart.hour;
+        document.getElementById("modalAStartMin").value =
+          shift.afternoonStart.minute;
+        document.getElementById("modalAStartAmPm").value =
+          shift.afternoonStart.ampm;
+        document.getElementById("modalAEndHour").value =
+          shift.afternoonEnd.hour;
+        document.getElementById("modalAEndMin").value =
+          shift.afternoonEnd.minute;
+        document.getElementById("modalAEndAmPm").value =
+          shift.afternoonEnd.ampm;
+        const otEn = shift.otEnabled || false;
+        document.getElementById("modalEnableOT").checked = otEn;
+        document.getElementById("modalOTFields").classList.toggle("open", otEn);
+        if (otEn && shift.otStart) {
+          document.getElementById("modalOTStartHour").value =
+            shift.otStart.hour;
+          document.getElementById("modalOTStartMin").value =
+            shift.otStart.minute;
+          document.getElementById("modalOTStartAmPm").value =
+            shift.otStart.ampm;
+          document.getElementById("modalOTEndHour").value = shift.otEnd.hour;
+          document.getElementById("modalOTEndMin").value = shift.otEnd.minute;
+          document.getElementById("modalOTEndAmPm").value = shift.otEnd.ampm;
+        } else {
+          // defaults
+          document.getElementById("modalOTStartHour").value = 5;
+          document.getElementById("modalOTStartMin").value = 30;
+          document.getElementById("modalOTStartAmPm").value = "PM";
+          document.getElementById("modalOTEndHour").value = 7;
+          document.getElementById("modalOTEndMin").value = 0;
+          document.getElementById("modalOTEndAmPm").value = "PM";
+        }
+        document.getElementById("modalErrorMsg").style.display = "none";
+        updateModalPreview();
+        document.getElementById("editModal").classList.add("active");
+        document.body.style.overflow = "hidden";
+      }
+
+      // Modal functions
+      function getModalShiftObject() {
+        const date = document.getElementById("modalDate").value;
+        if (!date) return null;
+        const skipMorning = document.getElementById("modalSkipMorning").checked;
+        const skipAfternoon =
+          document.getElementById("modalSkipAfternoon").checked;
+        const ms = {
+          hour: document.getElementById("modalMStartHour").value,
+          minute: document.getElementById("modalMStartMin").value,
+          ampm: document.getElementById("modalMStartAmPm").value,
+        };
+        const me = {
+          hour: document.getElementById("modalMEndHour").value,
+          minute: document.getElementById("modalMEndMin").value,
+          ampm: document.getElementById("modalMEndAmPm").value,
+        };
+        const as = {
+          hour: document.getElementById("modalAStartHour").value,
+          minute: document.getElementById("modalAStartMin").value,
+          ampm: document.getElementById("modalAStartAmPm").value,
+        };
+        const ae = {
+          hour: document.getElementById("modalAEndHour").value,
+          minute: document.getElementById("modalAEndMin").value,
+          ampm: document.getElementById("modalAEndAmPm").value,
+        };
+        const otEnabled = document.getElementById("modalEnableOT").checked;
+        let otStart = null,
+          otEnd = null;
+        if (otEnabled) {
+          otStart = {
+            hour: document.getElementById("modalOTStartHour").value,
+            minute: document.getElementById("modalOTStartMin").value,
+            ampm: document.getElementById("modalOTStartAmPm").value,
+          };
+          otEnd = {
+            hour: document.getElementById("modalOTEndHour").value,
+            minute: document.getElementById("modalOTEndMin").value,
+            ampm: document.getElementById("modalOTEndAmPm").value,
+          };
+        }
+        let total = 0;
+        if (!skipMorning) {
+          const s = toMinutes(ms.hour, ms.minute, ms.ampm);
+          const e = toMinutes(me.hour, me.minute, me.ampm);
+          if (e <= s) return null;
+          total += e - s;
+        }
+        if (!skipAfternoon) {
+          const s = toMinutes(as.hour, as.minute, as.ampm);
+          const e = toMinutes(ae.hour, ae.minute, ae.ampm);
+          if (e <= s) return null;
+          total += e - s;
+        }
+        if (otEnabled && otStart) {
+          const s = toMinutes(otStart.hour, otStart.minute, otStart.ampm);
+          const e = toMinutes(otEnd.hour, otEnd.minute, otEnd.ampm);
+          if (e <= s) return null;
+          total += e - s;
+        }
+        return {
+          date,
+          skipMorning,
+          skipAfternoon,
+          morningStart: ms,
+          morningEnd: me,
+          afternoonStart: as,
+          afternoonEnd: ae,
+          otEnabled,
+          otStart,
+          otEnd,
+          totalMinutes: total,
+        };
+      }
+
+      function computeModalTotal() {
+        const shift = getModalShiftObject();
+        if (!shift) return null;
+        return shift.totalMinutes;
+      }
+
+      function updateModalPreview() {
+        const mins = computeModalTotal();
+        if (mins === null) {
+          document.getElementById("modalTotalPreview").innerHTML =
+            "⚠️ Invalid times: end after start for active sessions.";
+          return false;
+        }
+        document.getElementById("modalTotalPreview").innerHTML =
+          `⏲️ Current shift total: ${formatHoursMinutes(mins)}`;
+        return true;
+      }
+
+      function showModalError(msg) {
+        const errDiv = document.getElementById("modalErrorMsg");
+        errDiv.style.display = "block";
+        errDiv.innerText = msg;
+      }
+
+      function closeModal() {
+        document.getElementById("editModal").classList.remove("active");
+        document.body.style.overflow = "";
+        modalEditingId = null;
+      }
+
+      function saveModalEdit() {
+        const shiftData = getModalShiftObject();
+        if (!shiftData) {
+          showModalError("❌ Please select a date and ensure times are valid.");
+          return;
+        }
+        // update the shift in the array
+        const index = shifts.findIndex((s) => s.id === modalEditingId);
+        if (index === -1) {
+          showModalError("❌ Shift not found.");
+          return;
+        }
+        shifts[index] = { id: modalEditingId, ...shiftData };
+        // re-render and apply highlight
+        shifts.forEach((s) => delete s._newHighlight);
+        const target = shifts.find((s) => s.id === modalEditingId);
+        if (target) target._newHighlight = true;
+        renderShiftsList();
+        if (target) applyHighlightToShift(target.id);
+        closeModal();
+        // Show toast
+        showToast(
+          "✅ Your changes have been saved successfully.",
+          "success",
+          3500,
+        );
+      }
+
+      // Toast
+      function showToast(message, type = "success", duration = 3000) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.className = type;
+        toast.classList.add("show");
+        clearTimeout(toast._hideTimer);
+        toast._hideTimer = setTimeout(() => {
+          toast.classList.remove("show");
+        }, duration);
+      }
+
+      // ---------- Other helpers ----------
+      function computeCurrentTotalMinutes() {
+        const skipM = document.getElementById("skipMorning").checked;
+        const skipA = document.getElementById("skipAfternoon").checked;
+        let total = 0;
+        if (!skipM) {
+          const dur = getDurFromIds(
+            "morningStartHour",
+            "morningStartMinute",
+            "morningStartAmPm",
+            "morningEndHour",
+            "morningEndMinute",
+            "morningEndAmPm",
+          );
+          if (dur === null) return null;
+          total += dur;
+        }
+        if (!skipA) {
+          const dur = getDurFromIds(
+            "afternoonStartHour",
+            "afternoonStartMinute",
+            "afternoonStartAmPm",
+            "afternoonEndHour",
+            "afternoonEndMinute",
+            "afternoonEndAmPm",
+          );
+          if (dur === null) return null;
+          total += dur;
+        }
+        if (document.getElementById("enableOvertimeCheckbox").checked) {
+          const dur = getDurFromIds(
+            "otStartHour",
+            "otStartMinute",
+            "otStartAmPm",
+            "otEndHour",
+            "otEndMinute",
+            "otEndAmPm",
+          );
+          if (dur === null) return null;
+          total += dur;
+        }
+        return total;
+      }
+
+      function getDurFromIds(sH, sM, sA, eH, eM, eA) {
+        const start = toMinutes(
+          document.getElementById(sH).value,
+          document.getElementById(sM).value,
+          document.getElementById(sA).value,
+        );
+        const end = toMinutes(
+          document.getElementById(eH).value,
+          document.getElementById(eM).value,
+          document.getElementById(eA).value,
+        );
+        if (end <= start) return null;
+        return end - start;
+      }
+
+      function updateLivePreview() {
+        const totalMins = computeCurrentTotalMinutes();
+        if (totalMins === null) {
+          document.getElementById("liveTotalPreview").innerHTML =
+            "⚠️ Invalid times: end after start for active sessions.";
+          return false;
+        } else {
+          document.getElementById("liveTotalPreview").innerHTML =
+            `⏲️ Current shift total: ${formatHoursMinutes(totalMins)}`;
+          return true;
+        }
+      }
+
+      function toggleMorningFields() {
+        const skip = document.getElementById("skipMorning").checked;
+        [
+          "morningStartHour",
+          "morningStartMinute",
+          "morningStartAmPm",
+          "morningEndHour",
+          "morningEndMinute",
+          "morningEndAmPm",
+        ].forEach((id) => {
+          document.getElementById(id).classList.toggle("disabled-input", skip);
+        });
+        updateLivePreview();
+      }
+      function toggleAfternoonFields() {
+        const skip = document.getElementById("skipAfternoon").checked;
+        [
+          "afternoonStartHour",
+          "afternoonStartMinute",
+          "afternoonStartAmPm",
+          "afternoonEndHour",
+          "afternoonEndMinute",
+          "afternoonEndAmPm",
+        ].forEach((id) => {
+          document.getElementById(id).classList.toggle("disabled-input", skip);
+        });
+        updateLivePreview();
+      }
+
+      function loadSampleEntries() {
+        if (
+          shifts.length > 0 &&
+          !confirm("Load sample data? This will replace existing records.")
+        )
+          return;
+        const s1 = {
+          id: nextId++,
+          date: "2026-01-29",
+          skipMorning: false,
+          skipAfternoon: false,
+          morningStart: { hour: 6, minute: 51, ampm: "AM" },
+          morningEnd: { hour: 11, minute: 59, ampm: "AM" },
+          afternoonStart: { hour: 1, minute: 28, ampm: "PM" },
+          afternoonEnd: { hour: 5, minute: 8, ampm: "PM" },
+          otEnabled: false,
+          totalMinutes:
+            toMinutes(11, 59, "AM") -
+            toMinutes(6, 51, "AM") +
+            (toMinutes(17, 8, "PM") - toMinutes(13, 28, "PM")),
+        };
+        const s2 = {
+          id: nextId++,
+          date: "2026-02-12",
+          skipMorning: false,
+          skipAfternoon: false,
+          morningStart: { hour: 7, minute: 30, ampm: "AM" },
+          morningEnd: { hour: 11, minute: 42, ampm: "AM" },
+          afternoonStart: { hour: 1, minute: 1, ampm: "PM" },
+          afternoonEnd: { hour: 5, minute: 10, ampm: "PM" },
+          otEnabled: false,
+          totalMinutes:
+            toMinutes(11, 42, "AM") -
+            toMinutes(7, 30, "AM") +
+            (toMinutes(17, 10, "PM") - toMinutes(13, 1, "PM")),
+        };
+        const s3 = {
+          id: nextId++,
+          date: "2026-04-15",
+          skipMorning: false,
+          skipAfternoon: false,
+          morningStart: { hour: 8, minute: 13, ampm: "AM" },
+          morningEnd: { hour: 11, minute: 42, ampm: "AM" },
+          afternoonStart: { hour: 1, minute: 1, ampm: "PM" },
+          afternoonEnd: { hour: 4, minute: 43, ampm: "PM" },
+          otEnabled: false,
+          totalMinutes:
+            toMinutes(11, 42, "AM") -
+            toMinutes(8, 13, "AM") +
+            (toMinutes(16, 43, "PM") - toMinutes(13, 1, "PM")),
+        };
+        const s4 = {
+          id: nextId++,
+          date: "2026-05-08",
+          skipMorning: false,
+          skipAfternoon: false,
+          morningStart: { hour: 8, minute: 0, ampm: "AM" },
+          morningEnd: { hour: 12, minute: 0, ampm: "PM" },
+          afternoonStart: { hour: 1, minute: 0, ampm: "PM" },
+          afternoonEnd: { hour: 5, minute: 30, ampm: "PM" },
+          otEnabled: true,
+          otStart: { hour: 5, minute: 30, ampm: "PM" },
+          otEnd: { hour: 7, minute: 0, ampm: "PM" },
+          totalMinutes: 240 + 270 + 90,
+        };
+        shifts = [s1, s2, s3, s4];
+        renderShiftsList();
+        resetFormToDefault();
+      }
+
+      // ---------- Event listeners ----------
+      document
+        .getElementById("addShiftBtn")
+        .addEventListener("click", addOrUpdateShift);
+      document
+        .getElementById("cancelEditBtn")
+        .addEventListener("click", resetFormToDefault);
+      document
+        .getElementById("loadSampleBtn")
+        .addEventListener("click", loadSampleEntries);
+      document
+        .getElementById("enableOvertimeCheckbox")
+        .addEventListener("change", (e) => {
+          document.getElementById("overtimeFields").style.display = e.target
+            .checked
+            ? "flex"
+            : "none";
+          updateLivePreview();
+        });
+      document.getElementById("skipMorning").addEventListener("change", () => {
+        toggleMorningFields();
+        updateLivePreview();
+      });
+      document
+        .getElementById("skipAfternoon")
+        .addEventListener("change", () => {
+          toggleAfternoonFields();
+          updateLivePreview();
+        });
+      document
+        .getElementById("groupBySelect")
+        .addEventListener("change", renderShiftsList);
+      document
+        .getElementById("sortOrderSelect")
+        .addEventListener("change", renderShiftsList);
+      document
+        .getElementById("targetHoursInput")
+        .addEventListener("input", updateTargetAndStats);
+      document
+        .querySelectorAll("input.time-num, select")
+        .forEach((el) => el.addEventListener("input", updateLivePreview));
+
+      // Modal event listeners
+      document
+        .getElementById("modalCloseBtn")
+        .addEventListener("click", closeModal);
+      document
+        .getElementById("modalCancelBtn")
+        .addEventListener("click", closeModal);
+      document
+        .getElementById("modalSaveBtn")
+        .addEventListener("click", saveModalEdit);
+      document.getElementById("editModal").addEventListener("click", (e) => {
+        if (e.target === document.getElementById("editModal")) closeModal();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (
+          e.key === "Escape" &&
+          document.getElementById("editModal").classList.contains("active")
+        )
+          closeModal();
+      });
+
+      // Modal OT toggle
+      document
+        .getElementById("modalEnableOT")
+        .addEventListener("change", (e) => {
+          document
+            .getElementById("modalOTFields")
+            .classList.toggle("open", e.target.checked);
+          updateModalPreview();
+        });
+      // Modal inputs preview update
+      document
+        .querySelectorAll("#editModal input, #editModal select")
+        .forEach((el) => {
+          el.addEventListener("input", updateModalPreview);
+          el.addEventListener("change", updateModalPreview);
+        });
+
+      // Dark mode toggle (now in header)
+      document
+        .getElementById("darkModeToggle")
+        .addEventListener("click", () => {
+          document.body.classList.toggle("dark");
+          document.getElementById("darkModeToggle").innerText =
+            document.body.classList.contains("dark")
+              ? "☀️ Light mode"
+              : "🌙 Dark mode";
+        });
+
+      // Initial render
+      toggleMorningFields();
+      toggleAfternoonFields();
+      updateLivePreview();
+      resetFormToDefault();
+      renderShiftsList();
+    </script>
+  </body>
+</html>
