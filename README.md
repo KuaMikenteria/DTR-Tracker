@@ -250,3 +250,40 @@ The long-term goal of this project is to become a complete **Internship Manageme
 > **OJT DTR Tracker** — *making internship attendance simple, accurate, and efficient.*
 
 Made with ❤️ to help students manage their internship journey.
+
+---
+
+# 🙏 Credits & References
+
+## 👨‍💻 Project Author
+
+**Kim Ruzzel L. Enteria**
+
+This project was developed as part of a personal learning initiative and portfolio to simplify Daily Time Record (DTR) management for On-the-Job Training (OJT), internship, and practicum students.
+
+---
+
+## 💡 Design Inspiration & Reference
+
+The user interface and overall concept were inspired by the work of:
+
+**Josh (Coffeeafiii ☕)**
+
+Reference Website:
+https://ojt-tracker-backup.web.app/dashboard.html
+
+While this project takes inspiration from the original concept, the source code has been independently developed, modified, and extended with additional functionality and improvements, including:
+
+- Internship progress tracking
+- Automatic hour computation
+- Configurable target hours
+- Statistics dashboard
+- Grouping and sorting of shifts
+- Modal-based editing
+- Responsive interface
+- Dark mode support
+- Improved user experience and maintainability
+
+Special thanks to the original creator for sharing an inspiring project that served as a valuable learning reference.
+
+---
