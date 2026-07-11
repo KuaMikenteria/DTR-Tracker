@@ -37,7 +37,7 @@ Built using **HTML5**, **CSS3**, and **Vanilla JavaScript**, the project require
 
 ## 1. Dashboard / Landing Page
 
-![Landing Page](img/main.png)
+![Landing Page](img/main_page.png)
 
 The landing page provides a complete overview of your internship progress, including statistics, target hours, progress tracking, and the Daily Time Record form. Users can immediately begin recording their attendance without additional setup.
 
